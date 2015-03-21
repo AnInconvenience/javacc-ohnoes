@@ -18,13 +18,34 @@ PARSER_BEGIN(EG1)
 	public static void main(String args []) throws ParseException
 	{
 		try {
-			EG1 parser = new EG1(new java.io.FileInputStream(new java.io.File("/home/faaf/ENSIBS/TheorieConcept/ProjetCompil/src/TestFile")));
+			EG1 parser = new EG1(System.in);	
+			if(args.length == 0) {
+				while(true)
+				{
+
+					try{
+						System.out.println(parser.expr());
+					} catch(Exception e)
+
+					{
+						System.out.println("NOK.");
+						System.out.println(e.getMessage());
+
+					}
+				}
+			}else {
+				java.io.File f = new java.io.File(args[0]);
+				EG1.ReInit(new java.io.FileInputStream(f));
+				while(true)
+				{
+					System.out.println(parser.expr());
+				}
+			}
 		}
 		catch (java.io.FileNotFoundException e) 
 		{
 			e.printStackTrace();
 		}
-		System.out.println(condition());
 		// while (true)
 		// {
 		// }
@@ -142,30 +163,30 @@ TOKEN : /*INTS AND STRINGS*/
 TOKEN :
 
 {
-< QUOTE : "\"" >
-|
-< #ANYCHAR : ~[] >
-|
-< STRINGDECL : < QUOTE > (< ANYCHAR >)* < QUOTE > >
+	< QUOTE : "\"" >
+		|
+		< #ANYCHAR : ~[] >
+		|
+		< STRINGDECL : < QUOTE > (< ANYCHAR >)* < QUOTE > >
 }
 
 
 /*
 TOKEN :
 {
-	< QUOTE : "\"" >  :  STRING_CONTENT 
+< QUOTE : "\"" >  :  STRING_CONTENT 
 }
 
 < STRING_CONTENT > MORE :
 {
-	< (~["\n","\r"])* >  
+< (~["\n","\r"])* >  
 }
 
 < STRING_CONTENT > TOKEN :
 {
-	< ENDQUOTE : "\"" > : DEFAULT
+< ENDQUOTE : "\"" > : DEFAULT
 }
-*/
+ */
 
 String string() :
 {
@@ -173,7 +194,7 @@ String string() :
 {
 	< STRINGDECL >
 	{
-	 return token.image.substring(1,token.image.length()-1);
+		return token.image.substring(1,token.image.length()-1);
 	}
 }
 
@@ -201,6 +222,16 @@ double num_expr() :
 		{return a;}
 }
 
+String expr() :
+{double a;
+	String b = "";}
+{
+
+	a=num_expr()
+
+	 < EOF >  {b="Bye!";}
+	{return(b + a);}
+}
 double term() :
 {double b; double a;}
 {
