@@ -1,0 +1,344 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.17+ wizard for JavaCC 1.5.0+
+ */
+options
+{
+	JDK_VERSION = "1.5";
+	static = true;
+}
+
+PARSER_BEGIN(EG1)
+	//<?package_decl?>
+	import java.util.HashMap;
+	import java.util.Map;
+
+	public class EG1
+{
+	Map<String,Object> variables = new HashMap<String,Object>();
+	public static void main(String args []) throws ParseException
+	{
+		try {
+			EG1 parser = new EG1(new java.io.FileInputStream(new java.io.File("/home/faaf/ENSIBS/TheorieConcept/ProjetCompil/src/TestFile")));
+		}
+		catch (java.io.FileNotFoundException e) 
+		{
+			e.printStackTrace();
+		}
+		System.out.println(condition());
+		// while (true)
+		// {
+		// }
+		/*
+		   {
+		   System.out.println("Reading from standard input...");
+
+		   System.out.print("Enter an expression like \"1+(2+3)*4;\" :");
+		   try
+		   {
+		   switch (EG1.one_line())
+		   {
+		   case 0 : 
+		   System.out.println("OK.");
+		   break;
+		   case 1 : 
+		   System.out.println("Goodbye.");
+		   break;
+		   default : 
+		   break;
+		   }
+		   }
+		   catch (Exception e)
+		   {
+		   System.out.println("NOK.");
+		   System.out.println(e.getMessage());
+		   EG1.ReInit(System.in);
+		   }
+		   catch (Error e)
+		   {
+		   System.out.println("Oops.");
+		   System.out.println(e.getMessage());
+		   break;
+		   }
+		   }
+		 */
+	}
+}
+
+PARSER_END(EG1)
+
+	SKIP :
+{
+	" "
+		| "\r"
+		| "\t"
+		| "\n"
+}
+
+TOKEN : /* OPERATORS */
+{
+	< PLUS : "+" >
+		| < MINUS : "-" >
+		| < MULTIPLY : "*" >
+		| < DIVIDE : "/" >
+		| < EQUALS : "=" >
+		| < VALEQUALS : "==" >
+		| < NOTEQUALS : "!=" >
+		| < GEQUALS : ">=" >
+		| < LEQUALS : "<=" >
+		| < GREATER : ">" >
+		| < LESSER : "<" >
+		/*
+		   | < PEQUALS : "+=" >
+		   | < DEQUALS : "/=" >
+		   | < MULEQUALS : "*=" >
+		   | < MINEQUALS : "-=" >
+		 */
+}
+
+TOKEN : /*keywords*/
+{
+	< IF : "if" >
+		|< THEN : "then" >
+		|< FI : "fi" >
+		|< DO : "do" >
+		|< WHILE : "while" >
+		|< SEMICOLON : ";" >
+		|< FOR : "for" >
+		|< LP : "(" >
+		|< RP : ")" >
+}
+
+
+TOKEN : /*types names*/
+{
+
+	< BOOL : "boolean" >
+		| < STRING : "string" >
+		| < INT : "int" >
+		| < SHORT : "short" >
+		| < FLOAT : "float" >
+		| < DOUBLE : "double" >
+		| < CHAR : "char" >
+}
+
+TOKEN : /* LOGICAL OPERATORS */
+{
+	< LOGICALAND : "&&" > 
+		| < LOGICALOR : "||" >
+}
+
+TOKEN : /*INTS AND STRINGS*/
+{
+	< CONSTANT : (< DIGIT >)+ >
+		| < #DIGIT : [ "0"-"9" ] >
+		//| < DECIMALNUMBER : ("-")? (< CONSTANT >)+ ("." (< CONSTANT >)+)? >
+		| < BOOLVAL : "true" | "false" >
+		| < VARNAME : ("_")? (< LETTERS >)+ >
+		| < LETTERS : [ "a"-"z", "A"-"Z" ] >
+
+}
+//String
+
+TOKEN :
+
+{
+< QUOTE : "\"" >
+|
+< #ANYCHAR : ~[] >
+|
+< STRINGDECL : < QUOTE > (< ANYCHAR >)* < QUOTE > >
+}
+
+
+/*
+TOKEN :
+{
+	< QUOTE : "\"" >  :  STRING_CONTENT 
+}
+
+< STRING_CONTENT > MORE :
+{
+	< (~["\n","\r"])* >  
+}
+
+< STRING_CONTENT > TOKEN :
+{
+	< ENDQUOTE : "\"" > : DEFAULT
+}
+*/
+
+String string() :
+{
+}
+{
+	< STRINGDECL >
+	{
+	 return token.image.substring(1,token.image.length()-1);
+	}
+}
+
+/*
+   String stringChain() :
+   {
+   Token t;
+   }
+   {
+   < QUOTE > t=< VARNAME > < QUOTE > {return t.toString();}
+   }
+ */
+
+
+double num_expr() :
+{double a;
+	double b;
+}
+{
+	a=term()
+		( 
+		 < PLUS > b=num_expr() {a=a+b;}
+		 | < MINUS > b=num_expr() {a=a-b;} 
+		)*
+		{return a;}
+}
+
+double term() :
+{double b; double a;}
+{
+	b=unary()
+		(
+
+		 < MULTIPLY > a=term() {b=b*a;}
+		 | < DIVIDE > a=term() {b=b/a;}
+
+		)*
+		{return b;}
+}
+
+double unary() :
+{double a;}
+
+{
+	< MINUS > a=element() {return -a;}
+	| a=element() {return a;}
+}
+
+double element() :
+{Token t;
+	double a;
+}
+{
+	t=< CONSTANT > {return Integer.parseInt(t.image);}
+	| < LP >a=num_expr() < RP > {return a;}
+}
+
+/*
+   boolean boolDecl() :
+   {
+   Token t;
+   }
+   {
+   < BOOL > varId()  "=" t=< BOOLVAL > ";" {return Boolean.parseBoolean(t.image);}
+   }*/
+
+
+void ifStatement() :
+{
+	Token t;
+	boolean bool;
+}
+{
+	< IF > < LP > bool=condition() < RP > t=< THEN > 
+	{
+		//sortir du bloc si condition fausse
+		if (bool=false) {
+			//	while (!(t=getNextToken().image).equals("fi"))
+			//		t=t.next;
+		}
+
+		//sinon traitement des instructions
+	}
+	< FI >
+}
+
+/*
+   void whileStatement() :
+   {
+   boolean bool;
+   }
+   {
+   < WHILE > < LP > bool=condition() < RP >
+   }
+ */
+
+boolean condition() :
+{
+	boolean a,b;
+}
+{
+	a = elemCondition()
+		(< LOGICALAND > b=elemCondition() {a=a && b;}
+		 | < LOGICALOR > b=elemCondition() {a=a || b ;} 
+		)*
+		{return a;}
+}
+
+boolean elemCondition() :
+{
+	Token t;
+	boolean b;
+	double d,e;
+}
+{
+	t=< BOOLVAL > {return Boolean.parseBoolean(t.image);} 	
+	|< LP > b=condition() < RP > {return b;}
+	|d = num_expr()
+		(
+		 < EQUALS > e = num_expr() {return d==e;}
+		 | 
+		 < GEQUALS > e = num_expr() {return d>=e;}
+		 |
+		 < LEQUALS > e = num_expr() {return d<=e;}
+		 |
+		 < GREATER > e = num_expr() {return d>e;}
+		 |< LESSER > e = num_expr() {return d<e;}
+		 |< NOTEQUALS > e = num_expr() {return d!=e;}
+		)
+}
+/*
+   boolean objectComparison()
+   {
+   Object o,p;
+   }
+   {
+
+   }
+
+   String string_expr()
+   {
+   Token t;
+   }
+   {
+   < QUOTE > t = < (~["\n","\r"])* > < QUOTE >
+   }
+ */
+// blocs commentaires
+
+SKIP :
+{
+	"/#" : COMMENTAIRE
+}
+
+< COMMENTAIRE > SKIP :
+{
+	"#/" : DEFAULT
+}
+< COMMENTAIRE > MORE :
+{
+	<~[]>
+}
+
+
+SPECIAL_TOKEN :
+{
+	<SINGLE_LINE_COMMENT: "#" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+}
