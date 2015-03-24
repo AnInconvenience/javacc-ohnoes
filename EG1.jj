@@ -24,7 +24,7 @@ PARSER_BEGIN(EG1)
 				{
 
 					try{
-						System.out.println(parser.expr());
+						parser.instr();
 					} catch(Exception e)
 
 					{
@@ -127,6 +127,7 @@ TOKEN : /*keywords*/
 		|< FOR : "for" >
 		|< LP : "(" >
 		|< RP : ")" >
+		|< ECHO : "echo" >
 }
 
 
@@ -152,7 +153,7 @@ TOKEN : /*INTS AND STRINGS*/
 {
 	< CONSTANT : (< DIGIT >)+ >
 		| < #DIGIT : [ "0"-"9" ] >
-		//| < DECIMALNUMBER : ("-")? (< CONSTANT >)+ ("." (< CONSTANT >)+)? >
+		| < DECIMALNUMBER : (< CONSTANT >)+ ("." (< CONSTANT >)+)? >
 		| < BOOLVAL : "true" | "false" >
 		| < VARNAME : ("_")? (< LETTERS >)+ >
 		| < LETTERS : [ "a"-"z", "A"-"Z" ] >
@@ -187,6 +188,15 @@ TOKEN :
 < ENDQUOTE : "\"" > : DEFAULT
 }
  */
+void instr() : 
+{
+String s;
+}
+{
+	s=echo(){System.out.println(s);}
+	| s=expr(){}
+	| < EOF > {System.out.println("Bye !");System.exit(1);}
+}
 
 String string() :
 {
@@ -196,6 +206,14 @@ String string() :
 	{
 		return token.image.substring(1,token.image.length()-1);
 	}
+}
+
+String echo() :
+{
+ String a;
+}
+{
+	< ECHO > a=expr() { return a;}
 }
 
 /*
@@ -228,8 +246,6 @@ String expr() :
 {
 
 	a=num_expr()
-
-	 < EOF >  {b="Bye!";}
 	{return(b + a);}
 }
 double term() :
@@ -258,7 +274,7 @@ double element() :
 	double a;
 }
 {
-	t=< CONSTANT > {return Integer.parseInt(t.image);}
+	t=< CONSTANT > {return Double.parseDouble(t.image);}
 	| < LP >a=num_expr() < RP > {return a;}
 }
 
