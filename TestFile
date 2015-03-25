@@ -1,2 +1,7 @@
-#(true || false || (22+5*3)>=44)
-
+if (22<3) then
+	double bob <- 22.6; 
+	bob <- 33;
+fi
+string nik <- "ta mere la" + "pute";
+string pute;
+double pute;
