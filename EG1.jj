@@ -14,7 +14,7 @@ PARSER_BEGIN(EG1)
 
 	public class EG1
 {
-	Map<String,Object> variables = new HashMap<String,Object>();
+	static Map<String,TypedObject> variables = new HashMap<String,TypedObject>();
 	public static void main(String args []) throws ParseException
 	{
 		try {
@@ -36,10 +36,10 @@ PARSER_BEGIN(EG1)
 			}else {
 				java.io.File f = new java.io.File(args[0]);
 				EG1.ReInit(new java.io.FileInputStream(f));
-				while(true)
-				{
-					System.out.println(parser.expr());
-				}
+
+					ifStatement();
+						System.out.println(variables.toString());
+				
 			}
 		}
 		catch (java.io.FileNotFoundException e) 
@@ -133,26 +133,21 @@ TOKEN : /*keywords*/
 TOKEN : /*types names*/
 {
 
-	< BOOL : "boolean" >
-		| < STRING : "string" >
-		| < INT : "int" >
-		| < SHORT : "short" >
-		| < FLOAT : "float" >
-		| < DOUBLE : "double" >
-		| < CHAR : "char" >
+	< VARTYPE : "boolean" | "int" | "string" | "char" | "double" >
+	|< AFFECT : "<-" >
 }
 
 TOKEN : /* LOGICAL OPERATORS */
 {
-	< LOGICALAND : "&&" > 
-		| < LOGICALOR : "||" >
+	< AND : "&&" > 
+		| < OR : "||" >
 }
 
 TOKEN : /*INTS AND STRINGS*/
 {
-	< CONSTANT : (< DIGIT >)+ >
+	< #CONSTANT : (< DIGIT >)+ >
 		| < #DIGIT : [ "0"-"9" ] >
-		//| < DECIMALNUMBER : ("-")? (< CONSTANT >)+ ("." (< CONSTANT >)+)? >
+		| < DECIMALNUMBER : (< CONSTANT >)+ ("." (< CONSTANT >)+)? >
 		| < BOOLVAL : "true" | "false" >
 		| < VARNAME : ("_")? (< LETTERS >)+ >
 		| < LETTERS : [ "a"-"z", "A"-"Z" ] >
@@ -165,193 +160,245 @@ TOKEN :
 {
 	< QUOTE : "\"" >
 		|
-		< #ANYCHAR : ~[] >
+		< #ANYCHAR : ~["\""] >
 		|
 		< STRINGDECL : < QUOTE > (< ANYCHAR >)* < QUOTE > >
 }
-
-
-/*
-TOKEN :
-{
-< QUOTE : "\"" >  :  STRING_CONTENT 
-}
-
-< STRING_CONTENT > MORE :
-{
-< (~["\n","\r"])* >  
-}
-
-< STRING_CONTENT > TOKEN :
-{
-< ENDQUOTE : "\"" > : DEFAULT
-}
- */
-
-String string() :
-{
-}
-{
-	< STRINGDECL >
-	{
-		return token.image.substring(1,token.image.length()-1);
-	}
-}
-
-/*
-   String stringChain() :
-   {
-   Token t;
-   }
-   {
-   < QUOTE > t=< VARNAME > < QUOTE > {return t.toString();}
-   }
- */
-
-
-double num_expr() :
-{double a;
-	double b;
-}
-{
-	a=term()
-		( 
-		 < PLUS > b=num_expr() {a=a+b;}
-		 | < MINUS > b=num_expr() {a=a-b;} 
-		)*
-		{return a;}
-}
-
-String expr() :
-{double a;
-	String b = "";}
-{
-
-	a=num_expr()
-
-	 < EOF >  {b="Bye!";}
-	{return(b + a);}
-}
-double term() :
-{double b; double a;}
-{
-	b=unary()
-		(
-
-		 < MULTIPLY > a=term() {b=b*a;}
-		 | < DIVIDE > a=term() {b=b/a;}
-
-		)*
-		{return b;}
-}
-
-double unary() :
-{double a;}
-
-{
-	< MINUS > a=element() {return -a;}
-	| a=element() {return a;}
-}
-
-double element() :
-{Token t;
-	double a;
-}
-{
-	t=< CONSTANT > {return Integer.parseInt(t.image);}
-	| < LP >a=num_expr() < RP > {return a;}
-}
-
-/*
-   boolean boolDecl() :
-   {
-   Token t;
-   }
-   {
-   < BOOL > varId()  "=" t=< BOOLVAL > ";" {return Boolean.parseBoolean(t.image);}
-   }*/
-
 
 void ifStatement() :
 {
 	Token t;
 	boolean bool;
+	TypedObject o;
 }
 {
-	< IF > < LP > bool=condition() < RP > t=< THEN > 
+	< IF > < LP > o=expr() < RP > t=< THEN >
 	{
+		if (!o.getType().equals(Type.BOOL))
+		{
+		System.err.println("not a boolean");
+		}
 		//sortir du bloc si condition fausse
-		if (bool=false) {
-			//	while (!(t=getNextToken().image).equals("fi"))
-			//		t=t.next;
+		else if (o.getBoolean().equals(Boolean.FALSE)) {
+				while (!getNextToken().image.equals("fi"))
+				{
+					t=t.next;
+					}
 		}
 
 		//sinon traitement des instructions
 	}
-	< FI >
+	multipleDecl()
 }
 
-/*
-   void whileStatement() :
-   {
-   boolean bool;
-   }
-   {
-   < WHILE > < LP > bool=condition() < RP >
-   }
- */
-
-boolean condition() :
+void multipleDecl() :
 {
-	boolean a,b;
 }
 {
-	a = elemCondition()
-		(< LOGICALAND > b=elemCondition() {a=a && b;}
-		 | < LOGICALOR > b=elemCondition() {a=a || b ;} 
-		)*
-		{return a;}
+(varAffect() | varDecl())*
 }
 
-boolean elemCondition() :
+void varAffect() :
 {
-	Token t;
-	boolean b;
-	double d,e;
+Token t;
+TypedObject o;
 }
 {
-	t=< BOOLVAL > {return Boolean.parseBoolean(t.image);} 	
-	|< LP > b=condition() < RP > {return b;}
-	|d = num_expr()
+t = < VARNAME > < AFFECT > o=value()
+  {
+   if (variables.get(t.image).getType().equals(o.getType())) variables.put(t.image,o);
+   else {
+   	if (variables.get(t.image).getType().equals(Type.DOUBLE) && o.getType().equals(Type.INT)) {
+	o.setType(Type.DOUBLE);
+	o.intToDouble();
+	variables.put(t.image,o);	
+	}
+   	}
+  }
+}
+void varDecl() :
+{
+Token t,v;
+TypedObject o;
+String var;
+}
+{
+ t = < VARTYPE > < VARNAME > {var=token.image; 
+ if (variables.containsKey(var)) System.err.println("variable deja definie pr un type different"); variables.put(var,null);} 
+ 	(< AFFECT >
+ 	(	
+	 o=value()
+	 {
+	 if (o.getType().equals(Type.STRING) && t.image.equals("string")) variables.put(var,o);
+	 if (o.getType().equals(Type.CHAR) && t.image.equals("char")) variables.put(var,o); 
+	 if(o.getType().equals(Type.BOOL) && t.image.equals("boolean"))
+		variables.put(var,o);
+		 else if(!t.image.equals("boolean")) {
+		 	if (t.image.equals("double"))
+		 	{
+			 o.intToDouble();
+		 	}
+			else if (t.image.equals("int"))
+			{
+			o.doubleToInt();
+			}
+		  	 variables.put(var,o);
+		 }
+		 	
+	 }
+	)
+	)?
+
+	("," < VARNAME > 
+	(< AFFECT >
+ 	(	
+	 o=value()
+	 {
+	 if (o.getType().equals(Type.STRING) && t.image.equals("string")) variables.put(var,o);
+	 if (o.getType().equals(Type.CHAR) && t.image.equals("char")) variables.put(var,o);
+	 
+	 if(o.getType().equals(Type.BOOL) && t.image.equals("boolean"))
+		variables.put(var,o);
+		 else {
+		 	if (t.image.equals("double"))
+		 	{
+			 o.intToDouble();
+		 	}
+			else if (t.image.equals("int"))
+			{
+			o.doubleToInt();
+			}
+		  	 variables.put(var,o);
+		 }
+		 	
+	} 
+	)
+	)?
+	)* < SEMICOLON > 
+		
+
+
+}
+
+TypedObject value() :
+{
+TypedObject o;
+}
+{
+( o=string() | o=expr()) {return o;}
+}
+
+TypedObject string() :
+{
+String str=null;
+Token t,s;
+}
+{
+	t = < STRINGDECL > 
+	{
+	 str=t.image.substring(1,t.image.length()-1);
+	}
+	(< PLUS > s=< STRINGDECL >
+	{
+		str=str+s.image.substring(1,s.image.length()-1);
+	}
+	)*
+	{
+		if(str.length()>1)
+		return new TypedObject(Type.STRING,str); 
+		else return new TypedObject(Type.CHAR,str.charAt(0));
+	}
+}
+
+TypedObject expr() :
+{
+TypedObject d,e;
+Boolean b=null;
+}
+{
+	d = num_expr()
 		(
-		 < EQUALS > e = num_expr() {return d==e;}
+		 < EQUALS > e = num_expr() {b=d.eq(e);}
 		 | 
-		 < GEQUALS > e = num_expr() {return d>=e;}
+		 < GEQUALS > e = num_expr() {b=d.ge(e);}
 		 |
-		 < LEQUALS > e = num_expr() {return d<=e;}
+		 < LEQUALS > e = num_expr() {b=d.le(e);}
 		 |
-		 < GREATER > e = num_expr() {return d>e;}
-		 |< LESSER > e = num_expr() {return d<e;}
-		 |< NOTEQUALS > e = num_expr() {return d!=e;}
-		)
+		 < GREATER > e = num_expr() {b=d.gt(e);}
+		 |< LESSER > e = num_expr() {b=d.lt(e);}
+		 |< NOTEQUALS > e = num_expr() {b=d.ne(e);}
+		)? 
+		{if (b!=null) return new TypedObject(Type.BOOL,(Boolean)b);
+		else return d;}
 }
-/*
-   boolean objectComparison()
-   {
-   Object o,p;
-   }
-   {
 
-   }
+TypedObject num_expr() :
+{TypedObject d,e;}
+{
+  d=term()
+  (
+    (
+      < PLUS > e=term() {d.add(e);}
+    | < MINUS > e=term() {d.sub(e);}
+    | < OR > e=term() {d.or(e);}
+    )
+  )*
+  {return d;}
+ }
 
-   String string_expr()
-   {
-   Token t;
-   }
-   {
-   < QUOTE > t = < (~["\n","\r"])* > < QUOTE >
-   }
- */
+TypedObject term() :
+{TypedObject d,e;}
+{
+  d=unary()
+  (
+    (
+      < MULTIPLY > e=unary() {d.mul(e);}
+    | < DIVIDE > e=unary() {d.div(e);}
+    | < AND > e=unary() {d.and(e);}
+    )
+    
+  )*
+  {return d;}
+}
+
+TypedObject unary() :
+{TypedObject d;}
+{
+  < MINUS > d=element() {return d.neg();}
+| d=element() {return d;}
+}
+
+TypedObject element() :
+{
+TypedObject o;
+int test;
+double d;
+}
+{
+ < DECIMALNUMBER > {
+ 	try {
+	test = Integer.parseInt(token.image);
+	return new TypedObject(Type.INT,new Integer(test));
+	}
+	catch (NumberFormatException e) {
+	d = Double.parseDouble(token.image);
+	return new TypedObject(Type.DOUBLE,new Double(d));
+	}
+}
+
+|
+< BOOLVAL >
+{
+return new TypedObject(Type.BOOL,new Boolean(Boolean.parseBoolean(token.image)));
+}
+ |
+"(" o=expr() ")" {
+return o;}
+
+}
+
+
+
 // blocs commentaires
 
 SKIP :
