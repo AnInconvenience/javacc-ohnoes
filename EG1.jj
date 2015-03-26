@@ -38,7 +38,7 @@ PARSER_BEGIN(EG1)
 				EG1.ReInit(new java.io.FileInputStream(f));
 				while(true)
 				{
-					System.out.println(parser.expr());
+					parser.instr();
 				}
 			}
 		}
