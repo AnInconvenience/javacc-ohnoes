@@ -24,7 +24,7 @@ PARSER_BEGIN(EG1)
 				{
 
 					try{
-						System.out.println(parser.expr());
+						parser.instr();
 					} catch(Exception e)
 
 					{
@@ -36,10 +36,10 @@ PARSER_BEGIN(EG1)
 			}else {
 				java.io.File f = new java.io.File(args[0]);
 				EG1.ReInit(new java.io.FileInputStream(f));
-
-					ifStatement();
-						System.out.println(variables.toString());
-				
+				while(true)
+				{
+					parser.instr();
+				}
 			}
 		}
 		catch (java.io.FileNotFoundException e) 
@@ -127,6 +127,7 @@ TOKEN : /*keywords*/
 		|< FOR : "for" >
 		|< LP : "(" >
 		|< RP : ")" >
+		|< ECHO : "echo" >
 }
 
 
@@ -195,7 +196,16 @@ void multipleDecl() :
 {
 }
 {
-(varAffect() | varDecl())*
+(varAffect() | varDecl())* {}
+}
+void instr() : 
+{
+TypedObject s;
+}
+{
+	s=echo(){System.out.println(s.parseString());}
+	| s=expr(){}
+	| < EOF > {System.out.println("Bye !");System.exit(1);}
 }
 
 void varAffect() :
@@ -275,10 +285,28 @@ String var;
 	)
 	)?
 	)* < SEMICOLON > 
+{}
+}
 		
 
-
+TypedObject echo() :
+{
+TypedObject a;
 }
+{
+	< ECHO > a=expr() { return a;}
+}
+
+/*
+   String stringChain() :
+   {
+   Token t;
+   }
+   {
+   < QUOTE > t=< VARNAME > < QUOTE > {return t.toString();}
+   }
+ */
+
 
 TypedObject value() :
 {

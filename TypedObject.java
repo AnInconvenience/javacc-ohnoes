@@ -46,6 +46,17 @@ public class TypedObject
 		return this.s;
 	}
 
+	public String parseString()
+	{
+		String str="";
+		if (b!=null) str = b.toString();
+		else if (s!=null) str = s;
+		else if (i!=null) str = i.toString();
+		else if (d!=null) str = d.toString();
+		else if (c!=null) str = c.toString();
+		return str; 
+	}
+
 	public Integer getInteger()
 	{
 		return this.i;

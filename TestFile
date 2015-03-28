@@ -5,3 +5,5 @@ fi
 string nik <- "ta mere la" + "pute";
 string pute;
 double pute;
+echo 2+3
+echo 5+5
