@@ -1,0 +1,97 @@
+
+options {
+	MULTI=true;
+	NODE_EXTENDS="MyNode";
+	TRACK_TOKENS=true;
+	NODE_PREFIX="JAR";
+}
+
+PARSER_BEGIN(JarvisParser)
+
+	/** MainClass*/
+	public class JarvisParser {
+
+		/**
+		 * Returns the root node of the AST.  
+		 * It only makes sense to call this after a successful parse. 
+		 * @return the root node
+		 */
+		public Node rootNode() {
+			return jjtree.rootNode();
+		}  
+
+	}
+
+PARSER_END(JarvisParser)
+
+
+	SKIP : /* WHITE SPACE */
+{
+	" "
+		| "\t"
+		| "\n"
+		| "\r"
+		| "\f"
+}
+
+TOKEN : /* KEYWORDS*/
+{
+	< ECHO: "echo" >
+}
+
+
+
+/** An Id. */
+void Id() #void :
+{
+	Token t;
+}
+{
+	t = <IDENTIFIER>  {}
+}
+/**Highest operation*/
+void jarvis() #void : { } {
+	((Echo())*  <EOF>) #Jarvis(true)
+}
+
+/** Echo function*/
+void Echo() #void :
+{
+}
+{
+	( <ECHO> ( Literal() | Integer()) {}) #Echo(1)
+}
+
+/** A literal. */
+void Literal() #void :
+{
+	Token t;
+}
+{
+	(
+	 t=<IDENTIFIER>
+	 {
+	 jjtThis.val = t.image;
+	 }
+	)#String(0)
+}
+
+void Integer() #void:
+{
+	Token t;
+}
+{
+	(t=<NUMBER> { jjtThis.val = Integer.parseInt(t.image);}) #Int(0)
+}
+
+TOKEN : /* IDENTIFIERS */
+{
+	< IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+		|
+		< #LETTER: [ "a"-"z", "A"-"Z" ] >
+		|
+		< #DIGIT: [ "0"-"9"] >
+		|
+		< NUMBER: (<DIGIT>)+ >
+}
+
