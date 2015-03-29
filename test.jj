@@ -1,0 +1,450 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.17+ wizard for JavaCC 1.5.0+
+ */
+options
+{
+	JDK_VERSION = "1.5";
+	static = true;
+}
+
+PARSER_BEGIN(EG1)
+	//<?package_decl?>
+	import java.util.HashMap;
+	import java.util.Map;
+
+	public class EG1
+{
+	static Map<String,TypedObject> variables = new HashMap<String,TypedObject>();
+	public static void main(String args []) throws ParseException
+	{
+		try {
+			EG1 parser = new EG1(System.in);	
+			if(args.length == 0) {
+				while(true)
+				{
+
+					try{
+						parser.instr();
+					} catch(Exception e)
+
+					{
+						System.out.println("NOK.");
+						System.out.println(e.getMessage());
+
+					}
+				}
+			}else {
+				java.io.File f = new java.io.File(args[0]);
+				EG1.ReInit(new java.io.FileInputStream(f));
+				while(true)
+				{
+					parser.instr();
+				}
+			}
+		}
+		catch (java.io.FileNotFoundException e) 
+		{
+			e.printStackTrace();
+		}
+		// while (true)
+		// {
+		// }
+		/*
+		   {
+		   System.out.println("Reading from standard input...");
+
+		   System.out.print("Enter an expression like \"1+(2+3)*4;\" :");
+		   try
+		   {
+		   switch (EG1.one_line())
+		   {
+		   case 0 : 
+		   System.out.println("OK.");
+		   break;
+		   case 1 : 
+		   System.out.println("Goodbye.");
+		   break;
+		   default : 
+		   break;
+		   }
+		   }
+		   catch (Exception e)
+		   {
+		   System.out.println("NOK.");
+		   System.out.println(e.getMessage());
+		   EG1.ReInit(System.in);
+		   }
+		   catch (Error e)
+		   {
+		   System.out.println("Oops.");
+		   System.out.println(e.getMessage());
+		   break;
+		   }
+		   }
+		 */
+	}
+}
+
+PARSER_END(EG1)
+
+	SKIP :
+{
+	" "
+		| "\r"
+		| "\t"
+		| "\n"
+}
+
+TOKEN : /* OPERATORS */
+{
+	< PLUS : "+" >
+		| < MINUS : "-" >
+		| < MULTIPLY : "*" >
+		| < DIVIDE : "/" >
+		| < EQUALS : "=" >
+		| < VALEQUALS : "==" >
+		| < NOTEQUALS : "!=" >
+		| < GEQUALS : ">=" >
+		| < LEQUALS : "<=" >
+		| < GREATER : ">" >
+		| < LESSER : "<" >
+		/*
+		   | < PEQUALS : "+=" >
+		   | < DEQUALS : "/=" >
+		   | < MULEQUALS : "*=" >
+		   | < MINEQUALS : "-=" >
+		 */
+}
+
+TOKEN : /*keywords*/
+{
+	< IF : "if" >
+		|< THEN : "then" >
+		|< FI : "fi" >
+		|< DO : "do" >
+		|< WHILE : "while" >
+		|< SEMICOLON : ";" >
+		|< FOR : "for" >
+		|< LP : "(" >
+		|< RP : ")" >
+		|< ECHO : "echo" >
+}
+
+
+TOKEN : /*types names*/
+{
+
+	< VARTYPE : "boolean" | "int" | "string" | "char" | "double" >
+	|< AFFECT : "<-" >
+}
+
+TOKEN : /* LOGICAL OPERATORS */
+{
+	< AND : "&&" > 
+		| < OR : "||" >
+}
+
+TOKEN : /*INTS AND STRINGS*/
+{
+	< #CONSTANT : (< DIGIT >)+ >
+		| < #DIGIT : [ "0"-"9" ] >
+		| < DECIMALNUMBER : (< CONSTANT >)+ ("." (< CONSTANT >)+)? >
+		| < BOOLVAL : "true" | "false" >
+		| < VARNAME : ("_")? (< LETTERS >)+ >
+		| < LETTERS : [ "a"-"z", "A"-"Z" ] >
+
+}
+//String
+
+TOKEN :
+
+{
+	< QUOTE : "\"" >
+		|
+		< #ANYCHAR : ~["\""] >
+		|
+		< STRINGDECL : < QUOTE > (< ANYCHAR >)* < QUOTE > >
+}
+
+void ifStatement() :
+{
+	Token t;
+	boolean bool;
+	TypedObject o;
+}
+{
+	< IF > < LP > o=expr() < RP > t=< THEN >
+	{
+		if (!o.getType().equals(Type.BOOL))
+		{
+		System.err.println("not a boolean");
+		}
+		//sortir du bloc si condition fausse
+		else if (o.getBoolean().equals(Boolean.FALSE)) {
+				while (!getNextToken().image.equals("fi"))
+				{
+					t=t.next;
+					}
+		}
+
+		//sinon traitement des instructions
+	}
+	multipleDecl()
+}
+
+void multipleDecl() :
+{
+}
+{
+(varAffect() | varDecl())* {}
+}
+void instr() : 
+{
+TypedObject s;
+}
+{
+	s=echo(){System.out.println(s.parseString());}
+	| s=expr(){}
+	| < EOF > {System.out.println("Bye !");System.exit(1);}
+}
+
+void varAffect() :
+{
+Token t;
+TypedObject o;
+}
+{
+t = < VARNAME > < AFFECT > o=value()
+  {
+   if (variables.get(t.image).getType().equals(o.getType())) variables.put(t.image,o);
+   else {
+   	if (variables.get(t.image).getType().equals(Type.DOUBLE) && o.getType().equals(Type.INT)) {
+	o.setType(Type.DOUBLE);
+	o.intToDouble();
+	variables.put(t.image,o);	
+	}
+   	}
+  }
+}
+void varDecl() :
+{
+Token t,v;
+TypedObject o;
+String var;
+}
+{
+ t = < VARTYPE > < VARNAME > {var=token.image; 
+ if (variables.containsKey(var)) System.err.println("variable deja definie pr un type different"); variables.put(var,null);} 
+ 	(< AFFECT >
+ 	(	
+	 o=value()
+	 {
+	 if (o.getType().equals(Type.STRING) && t.image.equals("string")) variables.put(var,o);
+	 if (o.getType().equals(Type.CHAR) && t.image.equals("char")) variables.put(var,o); 
+	 if(o.getType().equals(Type.BOOL) && t.image.equals("boolean"))
+		variables.put(var,o);
+		 else if(!t.image.equals("boolean")) {
+		 	if (t.image.equals("double"))
+		 	{
+			 o.intToDouble();
+		 	}
+			else if (t.image.equals("int"))
+			{
+			o.doubleToInt();
+			}
+		  	 variables.put(var,o);
+		 }
+		 	
+	 }
+	)
+	)?
+
+	("," < VARNAME > 
+	(< AFFECT >
+ 	(	
+	 o=value()
+	 {
+	 if (o.getType().equals(Type.STRING) && t.image.equals("string")) variables.put(var,o);
+	 if (o.getType().equals(Type.CHAR) && t.image.equals("char")) variables.put(var,o);
+	 
+	 if(o.getType().equals(Type.BOOL) && t.image.equals("boolean"))
+		variables.put(var,o);
+		 else {
+		 	if (t.image.equals("double"))
+		 	{
+			 o.intToDouble();
+		 	}
+			else if (t.image.equals("int"))
+			{
+			o.doubleToInt();
+			}
+		  	 variables.put(var,o);
+		 }
+		 	
+	} 
+	)
+	)?
+	)* < SEMICOLON > 
+{}
+}
+		
+
+TypedObject echo() :
+{
+TypedObject a;
+}
+{
+	< ECHO > a=expr() { return a;}
+}
+
+/*
+   String stringChain() :
+   {
+   Token t;
+   }
+   {
+   < QUOTE > t=< VARNAME > < QUOTE > {return t.toString();}
+   }
+ */
+
+
+TypedObject value() :
+{
+TypedObject o;
+}
+{
+( o=string() | o=expr()) {return o;}
+}
+
+TypedObject string() :
+{
+String str=null;
+Token t,s;
+}
+{
+	t = < STRINGDECL > 
+	{
+	 str=t.image.substring(1,t.image.length()-1);
+	}
+	(< PLUS > s=< STRINGDECL >
+	{
+		str=str+s.image.substring(1,s.image.length()-1);
+	}
+	)*
+	{
+		if(str.length()>1)
+		return new TypedObject(Type.STRING,str); 
+		else return new TypedObject(Type.CHAR,str.charAt(0));
+	}
+}
+
+TypedObject expr() :
+{
+TypedObject d,e;
+Boolean b=null;
+}
+{
+	d = num_expr()
+		(
+		 < EQUALS > e = num_expr() {b=d.eq(e);}
+		 | 
+		 < GEQUALS > e = num_expr() {b=d.ge(e);}
+		 |
+		 < LEQUALS > e = num_expr() {b=d.le(e);}
+		 |
+		 < GREATER > e = num_expr() {b=d.gt(e);}
+		 |< LESSER > e = num_expr() {b=d.lt(e);}
+		 |< NOTEQUALS > e = num_expr() {b=d.ne(e);}
+		)? 
+		{if (b!=null) return new TypedObject(Type.BOOL,(Boolean)b);
+		else return d;}
+}
+
+TypedObject num_expr() :
+{TypedObject d,e;}
+{
+  d=term()
+  (
+    (
+      < PLUS > e=term() {d.add(e);}
+    | < MINUS > e=term() {d.sub(e);}
+    | < OR > e=term() {d.or(e);}
+    )
+  )*
+  {return d;}
+ }
+
+TypedObject term() :
+{TypedObject d,e;}
+{
+  d=unary()
+  (
+    (
+      < MULTIPLY > e=unary() {d.mul(e);}
+    | < DIVIDE > e=unary() {d.div(e);}
+    | < AND > e=unary() {d.and(e);}
+    )
+    
+  )*
+  {return d;}
+}
+
+TypedObject unary() :
+{TypedObject d;}
+{
+  < MINUS > d=element() {return d.neg();}
+| d=element() {return d;}
+}
+
+TypedObject element() :
+{
+TypedObject o;
+int test;
+double d;
+}
+{
+ < DECIMALNUMBER > {
+ 	try {
+	test = Integer.parseInt(token.image);
+	return new TypedObject(Type.INT,new Integer(test));
+	}
+	catch (NumberFormatException e) {
+	d = Double.parseDouble(token.image);
+	return new TypedObject(Type.DOUBLE,new Double(d));
+	}
+}
+
+|
+< BOOLVAL >
+{
+return new TypedObject(Type.BOOL,new Boolean(Boolean.parseBoolean(token.image)));
+}
+ |
+"(" o=expr() ")" {
+return o;}
+
+}
+
+
+
+// blocs commentaires
+
+SKIP :
+{
+	"/#" : COMMENTAIRE
+}
+
+< COMMENTAIRE > SKIP :
+{
+	"#/" : DEFAULT
+}
+< COMMENTAIRE > MORE :
+{
+	<~[]>
+}
+
+
+SPECIAL_TOKEN :
+{
+	<SINGLE_LINE_COMMENT: "#" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+}
