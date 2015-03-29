@@ -13,7 +13,14 @@ class JARMinOper extends SimpleNode {
   {
 	  jjtGetChild(0).interpret();
 	  jjtGetChild(1).interpret();
-	  stack[--top]=  new Integer((Integer)stack[top]-(Integer)stack[top+1]);
+	  Object o = stack[--top], p = stack[top+1];
+	  if (o instanceof Integer && p instanceof Integer)
+	  {
+		  stack[top] = new Integer((Integer)o-(Integer)p); 
+	  } else {
+		  stack[top] = new Double(
+				  ((Number)o).doubleValue()-((Number)p).doubleValue()); 
+	  }
   }
 
 }

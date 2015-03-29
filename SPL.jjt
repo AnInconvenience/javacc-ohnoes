@@ -42,6 +42,8 @@ TOKEN : /* OPERATIONS*/
 {
 	< PLUS: "+" >
 		| < MINUS: "-" >
+		| < MULT: "*" >
+		| < DIV: "/" >
 }
 
 
@@ -60,17 +62,16 @@ void jarvis() #void : { } {
 }
 
 /** Simple Instruction */
-void Instr() #void :
-{
-}
-{
+void Instr() #void : { } {
 (Echo() | Oper()) 
 }
-/** Operations function*/
+/** Operations*/
 void Oper() #void : { Token t; } {
 	Literal() ((
 		<PLUS> Literal()) #AddOper(2)
 		| (<MINUS> Literal()) #MinOper(2)
+		| (<MULT> Literal()) #MultOper(2)
+		| (<DIV> Literal()) #DivOper(2)
 	)*
 }
 
@@ -83,6 +84,8 @@ void Echo() #void : { } {
 void Literal() #void : { Token t; } {
 	( t=<IDENTIFIER> { jjtThis.val = t.image; })#String(0)
 		|  (t=<NUMBER> { jjtThis.val = Integer.parseInt(t.image);}) #Int(0)
+		|  (t=<DECIMALNUMBER> { jjtThis.val = 
+				Double.parseDouble(t.image);}) #Double(0)
 }
 
 
@@ -95,5 +98,8 @@ TOKEN : /* IDENTIFIERS */
 		< #DIGIT: [ "0"-"9"] >
 		|
 		< NUMBER: (<DIGIT>)+ >
+		|
+		< DECIMALNUMBER: ((<NUMBER>)? "." <NUMBER> 
+				| <NUMBER> "." (<NUMBER>)?) >
 }
 
