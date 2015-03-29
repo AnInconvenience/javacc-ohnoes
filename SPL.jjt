@@ -34,10 +34,69 @@ PARSER_END(JarvisParser)
 		| "\f"
 }
 
-TOKEN : /* KEYWORDS*/
+
+TOKEN : /* OPERATORS */
 {
-	< ECHO: "echo" >
+	< PLUS : "+" >
+		| < MINUS : "-" >
+		| < MULT : "*" >
+		| < DIV : "/" >
+		| < EQUALS : "=" >
+		| < VALEQUALS : "==" >
+		| < NOTEQUALS : "!=" >
+		| < GEQUALS : ">=" >
+		| < LEQUALS : "<=" >
+		| < GREATER : ">" >
+		| < LESSER : "<" >
+		| < CONCAT : ".." >
+		/*
+		   | < PEQUALS : "+=" >
+		   | < DEQUALS : "/=" >
+		   | < MULEQUALS : "*=" >
+		   | < MINEQUALS : "-=" >
+		 */
 }
+
+TOKEN : /*keywords*/
+{
+	< IF : "if" >
+		|< THEN : "then" >
+		|< FI : "fi" >
+		|< DO : "do" >
+		|< WHILE : "while" >
+		|< SEMICOLON : ";" >
+		|< FOR : "for" >
+		|< LP : "(" >
+		|< RP : ")" >
+		|< ECHO : "echo" >
+}
+
+
+TOKEN : /*types names*/
+{
+
+	< VARTYPE : "boolean" | "int" | "string" | "char" | "double" >
+		|< AFFECT : "<-" >
+}
+
+TOKEN : /* LOGICAL OPERATORS */
+{
+	< AND : "&&" > 
+		| < OR : "||" >
+}
+
+//String
+
+TOKEN :
+
+{
+	< QUOTE : "\"" >
+		|
+		< #ANYCHAR : ~["\""] >
+		|
+		< STRING : < QUOTE > (< ANYCHAR >)* < QUOTE > >
+}
+
 
 
 
@@ -51,47 +110,108 @@ void Id() #void :
 }
 /**Highest operation*/
 void jarvis() #void : { } {
-	((Echo())*  <EOF>) #Jarvis(true)
+	(Instr())*  <EOF> #Jarvis(true)
 }
 
-/** Echo function*/
-void Echo() #void :
+void Instr() #void : { }
 {
+(Echo() | Oper())
 }
+/** Echo function*/
+void Echo() #void : { } {
+	( <ECHO> bool_expr() ) #Echo(1)
+}
+
+void bool_expr() #void:
+{}
 {
-	( <ECHO> ( Literal() | Integer()) {}) #Echo(1)
+ bool_or_expr()
+   (
+      (
+      < AND > bool_or_expr()#AndNode(2)
+      )
+   )*
+}
+void bool_or_expr() #void:
+{}
+{
+  equ_expr()
+     (
+     	( 
+    	 < OR > equ_expr() #OrNode(2)	
+	)
+     )*
+}
+void equ_expr() #void:
+{}
+{
+ compar_expr()
+   (
+       (
+       < VALEQUALS > compar_expr() #EQNode(2)
+      | < NOTEQUALS > compar_expr() #NENode(2)
+       )
+   )*
+}
+void compar_expr() #void :
+{}
+{
+Oper()
+  (
+      (
+		  < GEQUALS > Oper() #GENode(2)
+		| < LEQUALS > Oper() #LENode(2)
+		| < GREATER > Oper() #GTNode(2)
+		| < LESSER  > Oper() #LTNode(2)
+      )
+  )*
+}
+/** Operations*/
+void Oper() #void : { } {
+	OperPri() ((
+		<PLUS> OperPri()) #AddOper(2)
+		| (<MINUS> OperPri()) #MinOper(2)
+		| (<CONCAT> OperPri()) #ConcatOper(2)
+	)*
+}
+/** Operations*/
+void OperPri() #void : { } {
+	Literal() ((
+		 <MULT> Literal()) #MultOper(2)
+		| (<DIV> Literal()) #DivOper(2)
+	)*
 }
 
 /** A literal. */
-void Literal() #void :
-{
-	Token t;
-}
-{
-	(
-	 t=<IDENTIFIER>
-	 {
-	 jjtThis.val = t.image;
-	 }
-	)#String(0)
+void Literal() #void : { Token t; } {
+	 ( t=<STRING> { jjtThis.val = t.image; })#String(0)
+		|  (t=<NUMBER> { jjtThis.val = Integer.parseInt(t.image);}) #Int(0)
+		|  (t=<DECIMALNUMBER> { jjtThis.val = 
+				Double.parseDouble(t.image);}) #Double(0)
+				| (t=< BOOLVAL > {jjtThis.val=Boolean.parseBoolean(t.image);})#Bool(0)
+	|<LP> bool_expr() <RP> 
 }
 
-void Integer() #void:
-{
-	Token t;
-}
-{
-	(t=<NUMBER> { jjtThis.val = Integer.parseInt(t.image);}) #Int(0)
-}
 
 TOKEN : /* IDENTIFIERS */
 {
-	< IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+
+		 < BOOLVAL : "true" | "false" >
+		 |
+	 < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
 		|
 		< #LETTER: [ "a"-"z", "A"-"Z" ] >
 		|
 		< #DIGIT: [ "0"-"9"] >
 		|
 		< NUMBER: (<DIGIT>)+ >
+		|
+		< DECIMALNUMBER: ((<NUMBER>)? "." <NUMBER> 
+				| <NUMBER> "." (<NUMBER>)?) >
+}
+TOKEN : /*INTS AND STRINGS*/
+{
+	< #CONSTANT : (< DIGIT >)+ >
+
 }
 
