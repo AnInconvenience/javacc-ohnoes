@@ -38,6 +38,11 @@ TOKEN : /* KEYWORDS*/
 {
 	< ECHO: "echo" >
 }
+TOKEN : /* OPERATIONS*/
+{
+	< PLUS: "+" >
+		| < MINUS: "-" >
+}
 
 
 
@@ -51,38 +56,35 @@ void Id() #void :
 }
 /**Highest operation*/
 void jarvis() #void : { } {
-	((Echo())*  <EOF>) #Jarvis(true)
+	((Instr())*  <EOF>) #Jarvis(true)
+}
+
+/** Simple Instruction */
+void Instr() #void :
+{
+}
+{
+(Echo() | Oper()) 
+}
+/** Operations function*/
+void Oper() #void : { Token t; } {
+	Literal() ((
+		<PLUS> Literal()) #AddOper(2)
+		| (<MINUS> Literal()) #MinOper(2)
+	)*
 }
 
 /** Echo function*/
-void Echo() #void :
-{
-}
-{
-	( <ECHO> ( Literal() | Integer()) {}) #Echo(1)
+void Echo() #void : { } {
+	( <ECHO> Oper() ) #Echo(1)
 }
 
 /** A literal. */
-void Literal() #void :
-{
-	Token t;
-}
-{
-	(
-	 t=<IDENTIFIER>
-	 {
-	 jjtThis.val = t.image;
-	 }
-	)#String(0)
+void Literal() #void : { Token t; } {
+	( t=<IDENTIFIER> { jjtThis.val = t.image; })#String(0)
+		|  (t=<NUMBER> { jjtThis.val = Integer.parseInt(t.image);}) #Int(0)
 }
 
-void Integer() #void:
-{
-	Token t;
-}
-{
-	(t=<NUMBER> { jjtThis.val = Integer.parseInt(t.image);}) #Int(0)
-}
 
 TOKEN : /* IDENTIFIERS */
 {
