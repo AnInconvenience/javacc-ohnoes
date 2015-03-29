@@ -1,0 +1,272 @@
+
+options {
+    MULTI=true;
+    NODE_EXTENDS="MyNode";
+    TRACK_TOKENS=true;
+    NODE_DEFAULT_VOID=true;
+    NODE_PREFIX="J";
+}
+
+PARSER_BEGIN(JarvisParser)
+
+/** Stupid Programming Language parser. */
+public class JarvisParser {
+
+  /**
+   * Returns the root node of the AST.  
+   * It only makes sense to call this after a successful parse. 
+   * @return the root node
+   */
+  public Node rootNode() {
+    return jjtree.rootNode();
+  }  
+
+}
+
+PARSER_END(JarvisParser)
+
+
+SKIP : /* WHITE SPACE */
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+TOKEN : /* OPERATORS */
+{
+	< PLUS : "+" >
+		| < MINUS : "-" >
+		| < MULTIPLY : "*" >
+		| < DIVIDE : "/" >
+		| < EQUALS : "=" >
+		| < VALEQUALS : "==" >
+		| < NOTEQUALS : "!=" >
+		| < GEQUALS : ">=" >
+		| < LEQUALS : "<=" >
+		| < GREATER : ">" >
+		| < LESSER : "<" >
+		| < AND : "&&" >
+		| < OR : "||" >
+		| < NOT : "!" >
+		| < ECHO : "echo" >
+		/*
+		   | < PEQUALS : "+=" >
+		   | < DEQUALS : "/=" >
+		   | < MULEQUALS : "*=" >
+		   | < MINEQUALS : "-=" >
+		 */
+}
+
+TOKEN : /*keywords*/
+{
+	< IF : "if" >
+		|< THEN : "then" >
+		|< FI : "fi" >
+		|< DO : "do" >
+		|< WHILE : "while" >
+		|< SEMICOLON : ";" >
+		|< FOR : "for" >
+		|< LP : "(" >
+		|< RP : ")" >
+}
+TOKEN : /* Types */
+{
+   < INT: "int" >
+ |
+   < BOOL: "boolean" >
+  |
+  < STRING : "string" >
+  |
+  < DOUBLE : "double" >
+}
+
+TOKEN : /* LITERALS */
+{
+  < INTEGER_LITERAL: (<DIGIT>)+ >
+ | < DECIMALNUMBER : (< INTEGER_LITERAL >)+ ("." (< INTEGER_LITERAL >)+)? >
+ |
+ < BOOLVAL : "true" | "false" >
+}
+
+TOKEN : /* IDENTIFIERS */
+{
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+|
+  < #LETTER: [ "a"-"z", "A"-"Z" ] >
+|
+  < #DIGIT: [ "0"-"9"] >
+}
+
+
+TOKEN :
+{
+	< QUOTE : "\"" >
+		|
+		< #ANYCHAR : ~["\""] >
+		|
+		< STRINGDECL : < QUOTE > (< ANYCHAR >)* < QUOTE > >
+}
+
+/*
+ * Program structuring syntax follows.
+ */
+
+
+void CompilationUnit() #CompilationUnit : { }
+{
+(Echo())* < EOF > 
+}
+
+
+void Echo() :
+{}
+{
+(< ECHO > expr())#EchoNode(1)
+}
+
+void expr() :
+{}
+{
+(bool_expr() | string())
+}
+
+void bool_expr() :
+{}
+{
+ bool_or_expr()
+   (
+      (
+      < AND > bool_expr()#AndNode(2)
+      )
+   )*
+}
+void bool_or_expr() :
+{}
+{
+  equ_expr()
+     (
+     	( 
+    	 < OR > equ_expr() #OrNode(2)	
+	)
+     )*
+}
+void equ_expr() :
+{}
+{
+ compar_expr()
+   (
+       (
+       < VALEQUALS > compar_expr() #EQNode(2)
+       < NOTEQUALS > compar_expr() #NENode(2)
+       )
+   )*
+}
+void compar_expr() :
+{}
+{
+num_expr()
+  (
+      (
+		  < GEQUALS > num_expr() #GENode(2)
+		| < LEQUALS > num_expr() #LENode(2)
+		| < GREATER > num_expr() #GTNode(2)
+		| < LESSER  > num_expr() #LTNode(2)
+      )
+  )*
+}
+
+/**c'est souvent une expression numerique**/
+void num_expr() :
+{}
+{
+  term()
+  (
+    (
+      < PLUS > term() #PlusNode(2)
+    | < MINUS > term()#MinusNode(2)
+    )
+  )* 
+ }
+
+void term() :
+{}
+{
+  unary()
+  (
+    (
+      < MULTIPLY > unary()#MultNode(2)
+    | < DIVIDE > unary()#DivNode(2)
+    )
+    
+  )*
+}
+
+void unary() :
+{}
+{
+(
+  (
+< NOT > element()#NotNode(1)
+| < MINUS > element() #NegNode(1)
+| element() 
+)
+
+)
+}
+
+void element() :
+{
+Token t;
+}
+{
+(< INTEGER_LITERAL > {jjtThis.val=Integer.parseInt(token.image);})#IntValNode
+|
+(< DECIMALNUMBER > {jjtThis.val=Double.parseDouble(token.image);})#DoubleValNode
+|
+(< BOOLVAL > {jjtThis.val=Boolean.parseBoolean(token.image);})#BoolValNode
+|
+"(" expr() ")"
+}
+
+void string() :
+{
+Token t,s;
+String str;
+}
+{
+(
+t = < STRINGDECL > 
+	{
+	 str=t.image.substring(1,t.image.length()-1);
+	}
+	(< PLUS > s=< STRINGDECL >
+	{
+		str=str+s.image.substring(1,s.image.length()-1);
+	}
+	)*
+	{jjtThis.val=str;}
+)#StringValNode
+}
+
+SKIP :
+{
+	"/#" : COMMENTAIRE
+}
+
+< COMMENTAIRE > SKIP :
+{
+	"#/" : DEFAULT
+}
+< COMMENTAIRE > MORE :
+{
+	<~[]>
+}
+
+
+SPECIAL_TOKEN :
+{
+	<SINGLE_LINE_COMMENT: "#" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+}
