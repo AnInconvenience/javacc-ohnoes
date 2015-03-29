@@ -34,17 +34,69 @@ PARSER_END(JarvisParser)
 		| "\f"
 }
 
-TOKEN : /* KEYWORDS*/
+
+TOKEN : /* OPERATORS */
 {
-	< ECHO: "echo" >
+	< PLUS : "+" >
+		| < MINUS : "-" >
+		| < MULT : "*" >
+		| < DIV : "/" >
+		| < EQUALS : "=" >
+		| < VALEQUALS : "==" >
+		| < NOTEQUALS : "!=" >
+		| < GEQUALS : ">=" >
+		| < LEQUALS : "<=" >
+		| < GREATER : ">" >
+		| < LESSER : "<" >
+		| < CONCAT : ".." >
+		/*
+		   | < PEQUALS : "+=" >
+		   | < DEQUALS : "/=" >
+		   | < MULEQUALS : "*=" >
+		   | < MINEQUALS : "-=" >
+		 */
 }
-TOKEN : /* OPERATIONS*/
+
+TOKEN : /*keywords*/
 {
-	< PLUS: "+" >
-		| < MINUS: "-" >
-		| < MULT: "*" >
-		| < DIV: "/" >
+	< IF : "if" >
+		|< THEN : "then" >
+		|< FI : "fi" >
+		|< DO : "do" >
+		|< WHILE : "while" >
+		|< SEMICOLON : ";" >
+		|< FOR : "for" >
+		|< LP : "(" >
+		|< RP : ")" >
+		|< ECHO : "echo" >
 }
+
+
+TOKEN : /*types names*/
+{
+
+	< VARTYPE : "boolean" | "int" | "string" | "char" | "double" >
+		|< AFFECT : "<-" >
+}
+
+TOKEN : /* LOGICAL OPERATORS */
+{
+	< AND : "&&" > 
+		| < OR : "||" >
+}
+
+//String
+
+TOKEN :
+
+{
+	< QUOTE : "\"" >
+		|
+		< #ANYCHAR : ~["\""] >
+		|
+		< STRING : < QUOTE > (< ANYCHAR >)* < QUOTE > >
+}
+
 
 
 
@@ -67,10 +119,16 @@ void Instr() #void : { } {
 }
 /** Operations*/
 void Oper() #void : { Token t; } {
+	OperPri() ((
+		<PLUS> OperPri()) #AddOper(2)
+		| (<MINUS> OperPri()) #MinOper(2)
+		| (<CONCAT> OperPri()) #ConcatOper(2)
+	)*
+}
+/** Operations*/
+void OperPri() #void : { Token t; } {
 	Literal() ((
-		<PLUS> Literal()) #AddOper(2)
-		| (<MINUS> Literal()) #MinOper(2)
-		| (<MULT> Literal()) #MultOper(2)
+		 <MULT> Literal()) #MultOper(2)
 		| (<DIV> Literal()) #DivOper(2)
 	)*
 }
@@ -82,7 +140,8 @@ void Echo() #void : { } {
 
 /** A literal. */
 void Literal() #void : { Token t; } {
-	( t=<IDENTIFIER> { jjtThis.val = t.image; })#String(0)
+	<LP> Oper() <RP> 
+	| ( t=<STRING> { jjtThis.val = t.image; })#String(0)
 		|  (t=<NUMBER> { jjtThis.val = Integer.parseInt(t.image);}) #Int(0)
 		|  (t=<DECIMALNUMBER> { jjtThis.val = 
 				Double.parseDouble(t.image);}) #Double(0)
@@ -91,7 +150,7 @@ void Literal() #void : { Token t; } {
 
 TOKEN : /* IDENTIFIERS */
 {
-	< IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+	 < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
 		|
 		< #LETTER: [ "a"-"z", "A"-"Z" ] >
 		|
@@ -101,5 +160,11 @@ TOKEN : /* IDENTIFIERS */
 		|
 		< DECIMALNUMBER: ((<NUMBER>)? "." <NUMBER> 
 				| <NUMBER> "." (<NUMBER>)?) >
+		| < BOOLVAL : "true" | "false" >
+}
+TOKEN : /*INTS AND STRINGS*/
+{
+	< #CONSTANT : (< DIGIT >)+ >
+
 }
 

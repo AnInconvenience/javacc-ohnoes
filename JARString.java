@@ -13,12 +13,9 @@ class JARString extends SimpleNode {
 
   public void interpret()
   {
-	  stack[++top] = new String(val);
+	  stack[++top] = new String(val.replace("\"", ""));
   }
   
-  public String toString() {
-	  return this.val;
-  }
 
 }
 /* JavaCC - OriginalChecksum=333a7c09752385ba2b5aa23ed4483cfd (do not edit this line) */
