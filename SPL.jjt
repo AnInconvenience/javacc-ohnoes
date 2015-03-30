@@ -125,20 +125,20 @@ void Echo() #void : { } {
 void bool_expr() #void:
 {}
 {
- bool_or_expr()
+ bool_and_expr()
    (
       (
-      < AND > bool_or_expr()#AndNode(2)
+      < OR > bool_and_expr()#OrNode(2)
       )
    )*
 }
-void bool_or_expr() #void:
+void bool_and_expr() #void:
 {}
 {
   equ_expr()
      (
      	( 
-    	 < OR > equ_expr() #OrNode(2)	
+    	 < AND > equ_expr() #AndNode(2)	
 	)
      )*
 }
