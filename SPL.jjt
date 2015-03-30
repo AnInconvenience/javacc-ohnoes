@@ -100,6 +100,16 @@ TOKEN :
 
 
 
+
+/**Highest operation*/
+void jarvis() #void : { } {
+	((Instr())*  <EOF>) #Jarvis(true)
+}
+
+void Instr() #void : { }
+{
+(Echo() | Oper())
+}
 /** An Id. */
 void Id() #void :
 {
@@ -107,15 +117,6 @@ void Id() #void :
 }
 {
 	t = <IDENTIFIER>  {}
-}
-/**Highest operation*/
-void jarvis() #void : { } {
-	(Instr())*  <EOF> #Jarvis(true)
-}
-
-void Instr() #void : { }
-{
-(Echo() | Oper())
 }
 /** Echo function*/
 void Echo() #void : { } {
