@@ -61,8 +61,11 @@ TOKEN : /*keywords*/
 {
 	< IF : "if" >
 		|< THEN : "then" >
+		|< ELIF : "else if">
+		|< ELSE : "else">
 		|< FI : "fi" >
 		|< DO : "do" >
+		|< DONE : "done" >
 		|< WHILE : "while" >
 		|< SEMICOLON : ";" >
 		|< FOR : "for" >
@@ -103,13 +106,9 @@ TOKEN :
 
 /**Highest operation*/
 void jarvis() #void : { } {
-	((Instr())*  <EOF>) #Jarvis(true)
+	(Block()  <EOF>) #Jarvis(true)
 }
 
-void Instr() #void : { }
-{
-(Echo() | Oper())
-}
 /** An Id. */
 void Id() #void :
 {
@@ -118,9 +117,38 @@ void Id() #void :
 {
 	t = <IDENTIFIER>  {}
 }
+
 /** Echo function*/
 void Echo() #void : { } {
 	( <ECHO> bool_expr() ) #Echo(1)
+}
+
+void Block() : { }
+{
+(Statement())*
+}
+
+void Statement() #void : { }
+{
+
+ (
+ Echo()
+|IfStatement()
+|WhileStatement()
+  )
+
+}
+void IfStatement() #void : { }
+{
+ ((< IF > "(" bool_expr() ")" < THEN > Block())#IfStatement(true) 
+ ((< ELIF > "(" bool_expr() ")" < THEN > Block())*)#ElifStatement(true) ( < ELSE > Block() )? 
+ < FI >) 
+}
+
+void WhileStatement() #void: { }
+{
+ (< WHILE > "(" bool_expr() ")" < DO > Block())#WhileStatement(true)
+ < DONE >
 }
 
 void bool_expr() #void:
@@ -143,6 +171,7 @@ void bool_and_expr() #void:
 	)
      )*
 }
+
 void equ_expr() #void:
 {}
 {
@@ -154,6 +183,7 @@ void equ_expr() #void:
        )
    )*
 }
+
 void compar_expr() #void :
 {}
 {
@@ -167,6 +197,7 @@ Oper()
       )
   )*
 }
+
 /** Operations*/
 void Oper() #void : { } {
 	OperPri() ((
@@ -175,6 +206,7 @@ void Oper() #void : { } {
 		| (<CONCAT> OperPri()) #ConcatOper(2)
 	)*
 }
+
 /** Operations*/
 void OperPri() #void : { } {
 	Literal() ((
@@ -199,7 +231,7 @@ TOKEN : /* IDENTIFIERS */
 
 		 < BOOLVAL : "true" | "false" >
 		 |
-	 < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+		 < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
 		|
 		< #LETTER: [ "a"-"z", "A"-"Z" ] >
 		|
@@ -216,3 +248,22 @@ TOKEN : /*INTS AND STRINGS*/
 
 }
 
+SKIP :
+{
+	"/#" : COMMENTAIRE
+}
+
+< COMMENTAIRE > SKIP :
+{
+	"#/" : DEFAULT
+}
+< COMMENTAIRE > MORE :
+{
+	<~[]>
+}
+
+
+SPECIAL_TOKEN :
+{
+	<SINGLE_LINE_COMMENT: "#" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+}
