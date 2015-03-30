@@ -140,9 +140,9 @@ void Statement() #void : { }
 }
 void IfStatement() #void : { }
 {
- ((< IF > "(" bool_expr() ")" < THEN > Block())#IfStatement(true) 
- ((< ELIF > "(" bool_expr() ")" < THEN > Block())*)#ElifStatement(true) ( < ELSE > Block() )? 
- < FI >) 
+ (< IF > "(" bool_expr() ")" < THEN > Block())#IfStatement(true) 
+ ((< ELIF > "(" bool_expr() ")" < THEN > Block())#ElifStatement(true))* ( < ELSE > Block() )? 
+ < FI > 
 }
 
 void WhileStatement() #void: { }
