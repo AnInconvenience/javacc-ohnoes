@@ -12,7 +12,7 @@ public class Jarvis{
 
 					{
 						System.out.println("NOK.");
-						System.out.println(e.getMessage());
+						e.printStackTrace();
 
 					}
 			}else {

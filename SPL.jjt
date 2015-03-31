@@ -115,11 +115,24 @@ void jarvis() #void : { } {
 
 void Instr() #void : { }
 {
-(Echo() | Oper())
+(Assign() | Statement() | Decl()  )
+}
+void Statement() #void : { }
+{
+	Echo() | Oper() 
+}
+void Decl() #void : {}
+{
+	((<VARTYPE>) (Varname())) #Decl(1)
+}
+
+void Assign() #void : {}
+{
+	 (Varname() <AFFECT> Oper()) #Assign(2)
 }
 /** Echo function*/
 void Echo() #void : { } {
-	( <ECHO> bool_expr() ) #Echo(1)
+	( <ECHO>  bool_expr() ) #Echo(1)
 }
 
 void bool_expr() #void:
@@ -167,6 +180,7 @@ void Oper() #void : { } {
 		| (<MINUS> OperPri()) #MinOper(2)
 		| (<CONCAT> OperPri()) #ConcatOper(2)
 	)*
+
 }
 /** Operations*/
 void OperPri() #void : { } {
@@ -175,24 +189,30 @@ void OperPri() #void : { } {
 		| (<DIV> Literal()) #DivOper(2)
 	)*
 }
+void Varname() #void: { Token t; }
+{
+	t=<VARNAME> {jjtThis.val = t.image;} #Varname(0)
+}
 
 /** A literal. */
 void Literal() #void : { Token t; } {
-	 ( t=<STRING> { jjtThis.val = t.image; })#String(0)
+	 Varname() #VarEval(1)
+	 | t=<STRING> { jjtThis.val = t.image; }#String(0)
 		|  (t=<NUMBER> { jjtThis.val = Integer.parseInt(t.image);}) #Int(0)
 		|  (t=<DECIMALNUMBER> { jjtThis.val = 
 				Double.parseDouble(t.image);}) #Double(0)
+				|<LP> bool_expr() <RP> 
 				| (t=< BOOLVAL > {jjtThis.val=Boolean.parseBoolean(t.image);})#Bool(0)
-	|<LP> bool_expr() <RP> 
 }
 
 
 TOKEN : /* IDENTIFIERS */
 {
-
-		 < BOOLVAL : "true" | "false" >
-		 |
-	 < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+	< VARNAME : (("_")?(<IDENTIFIER>)(("_")?<IDENTIFIER>)*) >
+		|
+		< BOOLVAL : "true" | "false" >
+		|
+		< IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
 		|
 		< #LETTER: [ "a"-"z", "A"-"Z" ] >
 		|
