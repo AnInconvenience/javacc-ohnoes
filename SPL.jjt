@@ -37,8 +37,8 @@ PARSER_END(JarvisParser)
 
 TOKEN : /* OPERATORS */
 {
-	< PLUS : "+" >
-		| < MINUS : "-" >
+	< MINUS: "+" >
+		| < PLUS : "-" >
 		| < MULT : "*" >
 		| < DIV : "/" >
 		| < EQUALS : "=" >
@@ -140,8 +140,8 @@ void Statement() #void : { }
 }
 void IfStatement() #void : { }
 {
- (< IF > "(" bool_expr() ")" < THEN > Block())#IfStatement(true) 
- ((< ELIF > "(" bool_expr() ")" < THEN > Block())#ElifStatement(true))* ( < ELSE > Block() )? 
+ (((< IF > "(" bool_expr() ")" < THEN > Block()) 
+ ((< ELIF > "(" bool_expr() ")" < THEN > Block()))*) (( < ELSE > Block() ))?)#IfStatement(true) 
  < FI > 
 }
 
