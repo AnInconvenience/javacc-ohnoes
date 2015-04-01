@@ -1,9 +1,23 @@
-if (22<3) then
-	double bob <- 22.6; 
-	bob <- 33;
-fi
-string nik <- "ta mere la" + "pute";
-string pute;
-double pute;
-echo 2+3
-echo 5+5
+_init :
+{
+	if(2<3) then
+	{
+		echo "INIF"
+	} fi
+	string bool
+		bool <- 5>2
+		if(bool) then
+		{
+			echo bool
+		} fi
+	int i
+		i <- 0
+		echo i
+		i <- i+1 
+		echo i
+		while(i<5) do
+		{
+			echo " I = " .. i
+				i <- i+1
+		} done
+}

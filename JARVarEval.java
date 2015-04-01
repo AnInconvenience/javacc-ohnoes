@@ -2,6 +2,8 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=false,TRACK_TOKENS=true,NODE_PREFIX=JAR,NODE_EXTENDS=MyNode,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 public
 class JARVarEval extends SimpleNode {
+	 String val;
+
   public JARVarEval(int id) {
     super(id);
   }
@@ -10,7 +12,7 @@ class JARVarEval extends SimpleNode {
     super(p, id);
   }
   public void interpret(){
-  stack[++top] = symtab.get(((JARVarname)jjtGetChild(0)).val);
+  stack[++top] = symtab.get(this.val);
   }
 
 }

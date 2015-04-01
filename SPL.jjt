@@ -37,8 +37,8 @@ PARSER_END(JarvisParser)
 
 TOKEN : /* OPERATORS */
 {
-	< PLUS : "+" >
-		| < MINUS : "-" >
+	< MINUS: "-" >
+		| < PLUS : "+" >
 		| < MULT : "*" >
 		| < DIV : "/" >
 		| < EQUALS : "=" >
@@ -61,14 +61,18 @@ TOKEN : /*keywords*/
 {
 	< IF : "if" >
 		|< THEN : "then" >
+		|< ELIF : "else if">
+		|< ELSE : "else">
 		|< FI : "fi" >
 		|< DO : "do" >
+		|< DONE : "done" >
 		|< WHILE : "while" >
 		|< SEMICOLON : ";" >
 		|< FOR : "for" >
 		|< LP : "(" >
 		|< RP : ")" >
 		|< ECHO : "echo" >
+		|< INIT : "_init :" >
 }
 
 
@@ -100,60 +104,80 @@ TOKEN :
 
 
 
+
+/**Highest operation*/
 /** An Id. */
-void Id() #void :
-{
-	Token t;
-}
-{
-	t = <IDENTIFIER>  {}
-}
 /**Highest operation*/
 void jarvis() #void : { } {
-	((Instr())*  <EOF>) #Jarvis(true)
+(<INIT> (Block())*  <EOF> )#Jarvis(true)
+}
+void Block() #void : { }
+{
+ "{" (Statement())+ "}" #Block(true) 
 }
 
-void Instr() #void : { }
-{
-(Assign() | Statement() | Decl()  )
-}
 void Statement() #void : { }
 {
-	Echo() | Oper() 
+	(Echo () | Decl () | Expr() | IfStatement() | WhileStatement()) 
 }
+
+void Expr() #void : { }
+{ 
+	bool_expr()
+		(
+		 <AFFECT> Expr() #Assign(2)
+		)?
+}
+
 void Decl() #void : {}
 {
 	((<VARTYPE>) (Varname())) #Decl(1)
 }
 
-void Assign() #void : {}
-{
-	 (Varname() <AFFECT> Oper()) #Assign(2)
-}
 /** Echo function*/
 void Echo() #void : { } {
-	( <ECHO>  bool_expr() ) #Echo(1)
+	( <ECHO>  Expr() ) #Echo(1)
+}
+
+
+void IfStatement() #void : { }
+{
+ (((< IF > "(" Expr() ")" < THEN > Block()) 
+ ((< ELIF > "(" Expr() ")" < THEN > Block()))*) (( < ELSE > Block() ))?)#IfStatement(true) 
+ < FI > 
+}
+
+void WhileStatement() #void: { }
+{
+ (< WHILE > "(" Expr() ")" < DO > Block())#WhileStatement(true)
+ < DONE >
 }
 
 void bool_expr() #void:
 {}
 {
- bool_or_expr()
+ bool_and_expr()
    (
       (
-      < AND > bool_or_expr()#AndNode(2)
+      < OR > bool_and_expr()#OrNode(2)
       )
    )*
 }
-void bool_or_expr() #void: {} {
+
+void bool_and_expr() #void:
+{}
+{
   equ_expr()
      (
      	( 
-    	 < OR > equ_expr() #OrNode(2)	
+    	 < AND > equ_expr() #AndNode(2)	
 	)
      )*
 }
-void equ_expr() #void: {} {
+
+void equ_expr() #void:
+{}
+{
  compar_expr()
    (
        (
@@ -162,7 +186,9 @@ void equ_expr() #void: {} {
        )
    )*
 }
-void compar_expr() #void : {} {
+void compar_expr() #void :
+{}
+{
 Oper()
   (
       (
@@ -173,6 +199,7 @@ Oper()
       )
   )*
 }
+
 /** Operations*/
 void Oper() #void : { } {
 	OperPri() ((
@@ -182,6 +209,7 @@ void Oper() #void : { } {
 	)*
 
 }
+
 /** Operations*/
 void OperPri() #void : { } {
 	Literal() ((
@@ -191,12 +219,12 @@ void OperPri() #void : { } {
 }
 void Varname() #void: { Token t; }
 {
-	t=<VARNAME> {jjtThis.val = t.image;} #Varname(0)
+	t=<VARNAME> {jjtThis.val = t.image;} #VarEval(0)
 }
 
 /** A literal. */
 void Literal() #void : { Token t; } {
-	 Varname() #VarEval(1)
+	 Varname()
 	 | t=<STRING> { jjtThis.val = t.image; }#String(0)
 		|  (t=<NUMBER> { jjtThis.val = Integer.parseInt(t.image);}) #Int(0)
 		|  (t=<DECIMALNUMBER> { jjtThis.val = 
@@ -208,9 +236,9 @@ void Literal() #void : { Token t; } {
 
 TOKEN : /* IDENTIFIERS */
 {
-	< VARNAME : (("_")?(<IDENTIFIER>)(("_")?<IDENTIFIER>)*) >
-		|
 		< BOOLVAL : "true" | "false" >
+		|
+		< VARNAME : (("_")?(<IDENTIFIER>)(("_")?<IDENTIFIER>)*) >
 		|
 		< IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
 		|
@@ -229,3 +257,22 @@ TOKEN : /*INTS AND STRINGS*/
 
 }
 
+SKIP :
+{
+	"/#" : COMMENTAIRE
+}
+
+< COMMENTAIRE > SKIP :
+{
+	"#/" : DEFAULT
+}
+< COMMENTAIRE > MORE :
+{
+	<~[]>
+}
+
+
+SPECIAL_TOKEN :
+{
+	<SINGLE_LINE_COMMENT: "#" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+}

@@ -17,12 +17,12 @@ class JARGTNode extends SimpleNode {
 
 		if (stack[top] instanceof Integer && stack[top-1] instanceof Integer)
 		{
-			stack[--top] = new Boolean(((Integer)stack[top]).intValue() < 
+			stack[--top] = new Boolean(((Integer)stack[top]).intValue() > 
 					((Integer)stack[top + 1]).intValue());
 		}
 		else
 
-			stack[--top] = new Boolean(((Number)stack[top]).doubleValue() <
+			stack[--top] = new Boolean(((Number)stack[top]).doubleValue() >
 					((Number)stack[top + 1]).doubleValue());
 	}
 }
