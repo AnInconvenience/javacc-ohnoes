@@ -11,14 +11,16 @@ class JARAddOper extends SimpleNode {
   }
   public void interpret()
   {
+	  Object o = null, p = null;
 	  jjtGetChild(0).interpret();
+	  o = stack[top--];
 	  jjtGetChild(1).interpret();
-	  Object o = stack[--top], p = stack[top+1];
+	  p = stack[top--];
 	  if (o instanceof Integer && p instanceof Integer)
 	  {
-		  stack[top] = new Integer((Integer)o+(Integer)p); 
+		  stack[++top] = new Integer((Integer)o+(Integer)p); 
 	  } else {
-		  stack[top] = new Double(
+		  stack[++top] = new Double(
 				  ((Number)o).doubleValue()+((Number)p).doubleValue()); 
 	  }
 

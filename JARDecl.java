@@ -13,8 +13,7 @@ class JARDecl extends SimpleNode {
 	}
 	public void interpret()
 	{
-			jjtGetChild(0).interpret();
-				MyNode.symtab.put((String)stack[top], "Hello WORLD !");
+				MyNode.symtab.put(((JARVarEval)jjtGetChild(0)).val, null);
 	}
 
 }

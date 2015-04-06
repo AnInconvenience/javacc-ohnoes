@@ -63,16 +63,14 @@ TOKEN : /*keywords*/
 		|< THEN : "then" >
 		|< ELIF : "else if">
 		|< ELSE : "else">
-		|< FI : "fi" >
 		|< DO : "do" >
-		|< DONE : "done" >
 		|< WHILE : "while" >
-		|< SEMICOLON : ";" >
 		|< FOR : "for" >
 		|< LP : "(" >
 		|< RP : ")" >
 		|< ECHO : "echo" >
 		|< INIT : "_init :" >
+		|< EOL : ";" >
 }
 
 
@@ -101,31 +99,25 @@ TOKEN :
 		< STRING : < QUOTE > (< ANYCHAR >)* < QUOTE > >
 }
 
-
-
-
-
-/**Highest operation*/
-/** An Id. */
 /**Highest operation*/
 void jarvis() #void : { } {
 (<INIT> (Block())*  <EOF> )#Jarvis(true)
 }
 void Block() #void : { }
 {
- "{" (Statement())+ "}" #Block(true) 
+ "{" (Statement())* "}" #Block(true) 
 }
 
 void Statement() #void : { }
 {
-	(Echo () | Decl () | Expr() | IfStatement() | WhileStatement()) 
+	(Echo () | Decl () | AssignStatement() <EOL> | IfStatement() | WhileStatement()) 
 }
 
-void Expr() #void : { }
-{ 
-	bool_expr()
+void AssignStatement() #void : { }
+{
+	Expr()
 		(
-		 <AFFECT> Expr() #Assign(2)
+		 <AFFECT> Expr()#Assign(2)
 		)?
 }
 
@@ -136,24 +128,22 @@ void Decl() #void : {}
 
 /** Echo function*/
 void Echo() #void : { } {
-	( <ECHO>  Expr() ) #Echo(1)
+	( <ECHO>  Expr() <EOL>) #Echo(1)
 }
 
 
 void IfStatement() #void : { }
 {
- (((< IF > "(" Expr() ")" < THEN > Block()) 
- ((< ELIF > "(" Expr() ")" < THEN > Block()))*) (( < ELSE > Block() ))?)#IfStatement(true) 
- < FI > 
+ (((< IF > "(" Expr() ")" Block()) 
+ ((< ELIF > "(" Expr() ")" Block()))*) (( < ELSE > Block() ))?)#IfStatement(true) 
 }
 
 void WhileStatement() #void: { }
 {
- (< WHILE > "(" Expr() ")" < DO > Block())#WhileStatement(true)
- < DONE >
+ (< WHILE > "(" Expr() ")" Block())#WhileStatement(2)
 }
 
-void bool_expr() #void:
+void Expr() #void:
 {}
 {
  bool_and_expr()
@@ -224,13 +214,13 @@ void Varname() #void: { Token t; }
 
 /** A literal. */
 void Literal() #void : { Token t; } {
-	 Varname()
-	 | t=<STRING> { jjtThis.val = t.image; }#String(0)
+	Varname()
+		| t=<STRING> { jjtThis.val = t.image; }#String(0)
 		|  (t=<NUMBER> { jjtThis.val = Integer.parseInt(t.image);}) #Int(0)
 		|  (t=<DECIMALNUMBER> { jjtThis.val = 
 				Double.parseDouble(t.image);}) #Double(0)
-				|<LP> bool_expr() <RP> 
-				| (t=< BOOLVAL > {jjtThis.val=Boolean.parseBoolean(t.image);})#Bool(0)
+		|<LP> Expr() <RP> 
+		| (t=< BOOLVAL > {jjtThis.val=Boolean.parseBoolean(t.image);})#Bool(0)
 }
 
 

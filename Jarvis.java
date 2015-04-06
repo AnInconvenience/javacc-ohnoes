@@ -7,6 +7,8 @@ public class Jarvis{
 					try{
 						parser.jarvis();
 						((SimpleNode)parser.rootNode()).dump(" ");
+						
+						((SimpleNode)parser.rootNode()).printStack();
 						parser.rootNode().interpret();
 					} catch(Exception e)
 

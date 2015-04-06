@@ -12,13 +12,12 @@ class JARWhileStatement extends SimpleNode {
 
   public void interpret()
   {
-	  while (true)
-	  {
-  jjtGetChild(0).interpret();
-		 if (!((Boolean)stack[top]).booleanValue())
-			 break;
-		 else jjtGetChild(1).interpret();
-	  }
+	  do {
+		  jjtGetChild(0).interpret();
+		  if(((Boolean)stack[top--]).booleanValue())
+			 jjtGetChild(1).interpret();
+		  else break;
+	  } while (true);
   }
 
 }

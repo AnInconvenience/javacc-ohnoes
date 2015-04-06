@@ -1,23 +1,13 @@
 _init :
 {
-	if(2<3) then
+	if(2<3) 
 	{
 		echo "INIF"
-	} fi
+	}
 	string bool
 		bool <- 5>2
-		if(bool) then
+		if(bool) 
 		{
 			echo bool
-		} fi
-	int i
-		i <- 0
-		echo i
-		i <- i+1 
-		echo i
-		while(i<5) do
-		{
-			echo " I = " .. i
-				i <- i+1
-		} done
+		}
 }

@@ -13,7 +13,7 @@ class JARAssign extends SimpleNode {
   {
 
 	  jjtGetChild(1).interpret();
-	  symtab.put(""+((JARVarEval)jjtGetChild(0)).val, stack[top]);
+	  symtab.put(""+((JARVarEval)jjtGetChild(0)).val, stack[top--]);
   }
 
 }
