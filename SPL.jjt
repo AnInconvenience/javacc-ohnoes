@@ -112,7 +112,7 @@ void Block() #void : { }
 
 void ForStatement() #void : { }
 {
- (< FOR > "(" Decl() AssignStatement() ";" Expr() ";" AssignStatement() ")" Block()) #ForStatement(true)
+ (< FOR > "(" AssignStatement() ";" Expr() ";" AssignStatement() ")" Block()) #ForStatement(true)
 }
 void function() #void : { }
 {

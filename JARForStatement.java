@@ -14,17 +14,15 @@ class JARForStatement extends SimpleNode {
   {
 	//decl variable
 	jjtGetChild(0).interpret();
-	//affect° variable
-	jjtGetChild(1).interpret();
 	  do {
 		  //condition boolenne
-		  jjtGetChild(2).interpret();
+		  jjtGetChild(1).interpret();
 		  if(((Boolean)stack[top--]).booleanValue())
 		  {
 			 //execution bloc
-			 jjtGetChild(4).interpret();
-			 //execution incrementation/decrementation
 			 jjtGetChild(3).interpret();
+			 //execution incrementation/decrementation
+			 jjtGetChild(2).interpret();
 		  }
 		  else break;
 	  } while (true);
