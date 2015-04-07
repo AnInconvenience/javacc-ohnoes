@@ -71,6 +71,8 @@ TOKEN : /*keywords*/
 		|< ECHO : "echo" >
 		|< INIT : "_init :" >
 		|< EOL : ";" >
+		|< FC : "func" >
+		|< PC : "proc" >
 }
 
 
@@ -111,6 +113,10 @@ void Block() #void : { }
 void ForStatement() #void : { }
 {
  (< FOR > "(" Decl() AssignStatement() ";" Expr() ";" AssignStatement() ")" Block()) #ForStatement(true)
+}
+void function() #void : { }
+{
+<FC> <IDENTIFIER>"(" (Decl())* ")"
 }
 void Statement() #void : { }
 {
