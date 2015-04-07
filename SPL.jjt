@@ -108,9 +108,13 @@ void Block() #void : { }
  ("{" (Statement())* "}") #Block(true) 
 }
 
+void ForStatement() #void : { }
+{
+ (< FOR > "(" Decl() AssignStatement() ";" Expr() ";" AssignStatement() ")" Block()) #ForStatement(true)
+}
 void Statement() #void : { }
 {
-	(Echo () | Decl () | AssignStatement() <EOL> | IfStatement() | WhileStatement()) 
+	(Echo () | Decl () | AssignStatement() <EOL> | ForStatement() | IfStatement() | WhileStatement()) 
 }
 
 void AssignStatement() #void : { }
