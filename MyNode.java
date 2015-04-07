@@ -38,6 +38,7 @@ public class MyNode
 {
   /** Symbol table */
   protected static java.util.HashMap<String, Object> symtab = new java.util.HashMap<String, Object>();
+  protected static java.util.HashMap<String, JARBlock> functab = new java.util.HashMap<String, JARBlock>();
 
   /** Stack for calculations. */
   protected static Object[] stack = new Object[1024];

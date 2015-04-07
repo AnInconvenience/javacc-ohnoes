@@ -71,8 +71,9 @@ TOKEN : /*keywords*/
 		|< ECHO : "echo" >
 		|< INIT : "_init :" >
 		|< EOL : ";" >
+		|< RET : "return" >
 		|< FC : "func" >
-		|< PC : "proc" >
+		|< CALL : "call" >
 }
 
 
@@ -103,7 +104,7 @@ TOKEN :
 
 /**Highest operation*/
 void jarvis() #void : { } {
-(<INIT> (Block())*  <EOF> )#Jarvis(true)
+((Function())* <INIT>(Block()) <EOF> )#Jarvis(true)
 }
 void Block() #void : { }
 {
@@ -114,13 +115,16 @@ void ForStatement() #void : { }
 {
  (< FOR > "(" AssignStatement() ";" Expr() ";" AssignStatement() ")" Block()) #ForStatement(true)
 }
-void function() #void : { }
+
+void Function() #void : {Token t;}
 {
-<FC> <IDENTIFIER>"(" (Decl())* ")"
+	(<FC> t=<VARNAME> "(" ")" Block(){jjtThis.val = t.image;})#Funct(1)
 }
+
 void Statement() #void : { }
 {
-	(Echo () | Decl () | AssignStatement() <EOL> | ForStatement() | IfStatement() | WhileStatement()) 
+	(Echo () | Decl () | AssignStatement() <EOL> | ForStatement() | Return() | 
+IfStatement() | WhileStatement()) 
 }
 
 void AssignStatement() #void : { }
@@ -139,6 +143,9 @@ void Decl() #void : {}
 /** Echo function*/
 void Echo() #void : { } {
 	( <ECHO>  Expr() <EOL>) #Echo(1)
+}
+void Return() #void : { } {
+	( <RET>  Expr() <EOL>) #Return(1)
 }
 
 
@@ -220,11 +227,16 @@ void OperPri() #void : { } {
 void Varname() #void: { Token t; }
 {
 	t=<VARNAME> {jjtThis.val = t.image;} #VarEval(0)
+}void Funcname() #void: { Token t; }
+{
+	((t=<VARNAME> <LP><RP>) {jjtThis.val = t.image;}) #Funcexec(0)
 }
+
 
 /** A literal. */
 void Literal() #void : { Token t; } {
-	Varname()
+	(<CALL> Funcname() )
+		| Varname()
 		| t=<STRING> { jjtThis.val = t.image; }#String(0)
 		|  (t=<NUMBER> { jjtThis.val = Integer.parseInt(t.image);}) #Int(0)
 		|  (t=<DECIMALNUMBER> { jjtThis.val = 
