@@ -1,0 +1,8 @@
+_init :
+{
+ for ( int a a<-0 ; a<5 ; a<-a+2 )
+ {
+ echo a;
+ echo "ta mere";
+ }
+}
