@@ -22,8 +22,6 @@ class JARIfStatement extends SimpleNode {
 		}
 		else
 		{
-			System.out.println("stack top after if "+stack[top].toString());
-			System.out.println("chikdrren number"+k);
 			if (k<3)
 			{
 			if (((Boolean)stack[top]).booleanValue())
@@ -34,7 +32,6 @@ class JARIfStatement extends SimpleNode {
 				for (int i = 3; i<=k; i=i+2) 
 				{
 					jjtGetChild(i-1).interpret();
-				System.out.println("stack top after elif "+stack[top].toString());
 					if (((Boolean)stack[top]).booleanValue())
 					{
 						jjtGetChild(i).interpret();

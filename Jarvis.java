@@ -8,7 +8,7 @@ public class Jarvis{
 						parser.jarvis();
 						((SimpleNode)parser.rootNode()).dump(" ");
 						
-						((SimpleNode)parser.rootNode()).printStack();
+						//((SimpleNode)parser.rootNode()).printStack();
 						parser.rootNode().interpret();
 					} catch(Exception e)
 
@@ -22,12 +22,15 @@ public class Jarvis{
 				JarvisParser.ReInit(new java.io.FileInputStream(f));
 					try{
 						parser.jarvis();
-						parser.jjtree.rootNode().interpret();
+						((SimpleNode)parser.rootNode()).dump(" ");
+						parser.rootNode().interpret();
 					} catch(Exception e)
 
 					{
 						System.out.println("NOK.");
 						System.out.println(e.getMessage());
+
+						System.out.println(e.getClass().toString());
 
 					}
 				}

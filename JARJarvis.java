@@ -24,10 +24,11 @@ class JARJarvis extends SimpleNode {
 					break;
 			}
 			System.out.println();
+			System.out.println("nb fils : "+k);
 
 
+			jjtGetChild(i).interpret();
 		}
-			jjtGetChild(k-2).interpret();
 	}
 }
 /* JavaCC - OriginalChecksum=de566767fba2abfd593409288aeb2a1a (do not edit this line) */
